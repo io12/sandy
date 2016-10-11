@@ -859,6 +859,7 @@ i_cleanup(int sig) {
 void
 i_die(const char *str) {
 	reset_shell_mode();
+	// Quit ncurses, restore terminal to time before sandy started
 	fputs(str, stderr);
 	exit(EXIT_FAILURE);
 }
@@ -2318,6 +2319,7 @@ t_warn(void) {
 }
 
 /* main() starts everything else */
+// I realize the convention is to comment every function, but this is ridiculous
 int
 main(int argc, char *argv[]) {
 	char *local_syn = NULL;
@@ -2325,18 +2327,24 @@ main(int argc, char *argv[]) {
 	/* Use system locale, hopefully UTF-8 */
 	setlocale(LC_ALL, "");
 
-	ARGBEGIN {
-	case 'r':
+	ARGBEGIN { // A clever macro used like a switch statement
+	case 'r': // opens the file read only
 		statusflags |= S_Readonly;
+		// a long that is ORed with flags from an enum
 		break;
-	case 'a':
+	case 'a': // turns on autoindenting
 		statusflags |= S_AutoIndent;
 		break;
-	case 'd':
+	case 'd': // output a save to stdout instead of a file
+		// saving automatically exits with this option
 		statusflags |= S_DumpStdout;
 		break;
-	case 't':
+	case 't': // sets the tabstop (interval of cols that <Tab> advances to)
 		tabstop = atoi(EARGF(i_usage()));
+		// EARGF means "if arg exists, return it, else, return it's input"
+		// in this case it returns the arg to atoi to get the tabstop as an
+		// int, but calls i_usage() if the arg doesn't exist, which exits and
+		// prints a help message
 		break;
 	case 'S':
 		local_syn = "";
